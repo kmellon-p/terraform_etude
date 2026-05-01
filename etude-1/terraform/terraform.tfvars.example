@@ -1,0 +1,4 @@
+aws_region        = "ap-northeast-2"
+secret_name       = "etude-1/app-password"
+github_owner      = "your-github-username"
+github_repository = "your-repo-name"
