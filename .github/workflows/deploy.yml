@@ -14,7 +14,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: [self-hosted, linux, raspberry]
+    runs-on: [self-hosted, linux]
 
     defaults:
       run:
