@@ -51,6 +51,8 @@ environment)
     - docker buildx
     - aws-cli
 
+관련 파일) - .github/workflows/deploy.yml
+
 주의할 점)
 
 - SSM으로 './delpoy.sh' 이런 명령어만 전송하고 구체적인 배포전력 등등...은 .sh파일로 구현하면 좋을듯?
@@ -65,13 +67,18 @@ goal)
 
 work-flow)
 
-1.  No.2를 git action으로 관리하기
+1.  terrafrom apply를 git action로 하기.
+2.  git actoin caches를 사용하기 (docker build, terraform 형상관리)
 
 process)
 
 git action(branch:release ) -> terraform 주입 완료.
 
+관련 파일) 
+    - .github/workflows/deploy2.yml 
+    - .github/workflows/terraform_apply.yml
+
 environment)
 
 1.  깃허브와 aws를 OIDC 적용하기
-2.  git release 브랜치에서 관리해보기
+2.  테라폼을 release 브랜치에서 관리해보기
