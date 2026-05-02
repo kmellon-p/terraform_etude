@@ -1,0 +1,53 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+// [1] BOM 버전을 한 곳에서만 관리하기 위한 사용자 정의 변수.
+//     아래 mavenBom(...) 한 줄에서만 참조되지만, 나중에 다른 awspring 모듈을
+//     추가했을 때 버전을 일치시키기 위한 "단일 진실 공급원" 역할을 한다.
+ext {
+	springCloudAwsVersion = '3.4.0'
+}
+
+// [2] BOM(Bill Of Materials) import.
+//     spring-cloud-aws-dependencies는 awspring이 publish하는 "버전 명세표"이고,
+//     그 안에는 spring-cloud-aws-* 모든 모듈의 호환되는 버전이 적혀 있다.
+//     여기서 import해두면 아래 dependencies 블록에서 awspring 모듈을 쓸 때
+//     버전을 적지 않아도 BOM이 알려주는 버전(3.4.0)을 자동으로 적용한다.
+//     이 기능은 plugins 블록의 'io.spring.dependency-management' 플러그인이 제공한다.
+dependencyManagement {
+	imports {
+		mavenBom "io.awspring.cloud:spring-cloud-aws-dependencies:${springCloudAwsVersion}"
+	}
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// [3] 버전이 없다. BOM이 3.4.0을 주입한다.
+	//     awspring 모듈을 추가로 쓰게 되면 (예: -starter-s3, -starter-sqs)
+	//     이 줄과 동일한 형태로 버전 없이 적기만 하면 같은 3.4.0으로 맞춰진다.
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
+	testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

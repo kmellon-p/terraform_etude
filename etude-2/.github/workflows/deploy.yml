@@ -1,0 +1,71 @@
+name: build-and-deploy
+
+# 빌드 서버(라즈베리파이)에 self-hosted runner를 등록해 두고
+# release 브랜치에 push 되면 buildx로 멀티/단일 아키 이미지를 만들어 ECR에 push,
+# SSM run-command로 EC2가 새 이미지를 pull/run 하도록 시킨다.
+
+on:
+  push:
+    branches: [release]
+    paths:
+      - "etude-2/springboot/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: [self-hosted, linux, raspberry]
+
+    defaults:
+      run:
+        working-directory: etude-2/springboot
+
+    env:
+      AWS_REGION: ap-northeast-2
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login --username AWS --password-stdin "${{ secrets.ECR_REGISTRY }}"
+
+      - name: Set up buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push image
+        uses: docker/build-push-action@v6
+        with:
+          context: etude-2/springboot
+          file: etude-2/springboot/Dockerfile
+          push: true
+          # 빌드서버가 라즈베리파이(arm64)지만 EC2는 x86_64이므로 amd64로 크로스 빌드한다.
+          platforms: linux/amd64
+          tags: |
+            ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+            ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+
+      - name: Trigger deploy on EC2 via SSM
+        run: |
+          IMAGE="${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${IMAGE_TAG}"
+          aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "etude-2 redeploy ${IMAGE_TAG}" \
+            --parameters commands="[
+              \"set -eux\",
+              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}\",
+              \"docker pull $IMAGE\",
+              \"docker rm -f app || true\",
+              \"docker run -d --name app --restart=always -p 8080:8080 -e AWS_REGION=$AWS_REGION -e AWS_SECRET_NAME=${{ secrets.AWS_SECRET_NAME }} $IMAGE\"
+            ]"
