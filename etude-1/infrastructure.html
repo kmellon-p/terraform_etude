@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>etude-1 인프라 가이드</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2e3250;
+      --accent: #5c7cfa;
+      --accent2: #f06595;
+      --accent3: #20c997;
+      --accent4: #fcc419;
+      --text: #e8eaf6;
+      --muted: #8892b0;
+      --code-bg: #12151f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding: 2.5rem 1rem;
+      background: linear-gradient(135deg, #1a1d27 0%, #232740 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); margin-top: .5rem; font-size: 1rem; }
+
+    /* ── Section titles ── */
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px; height: 1.2em;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Overview Flow (SVG diagram) ── */
+    .diagram-wrap {
+      overflow-x: auto;
+      padding: .5rem 0;
+    }
+    svg text { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    /* ── Step cards ── */
+    .steps { display: flex; flex-direction: column; gap: 1rem; }
+    .step {
+      display: grid;
+      grid-template-columns: 2.4rem 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+    .step-num {
+      width: 2.4rem; height: 2.4rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .9rem;
+      flex-shrink: 0;
+    }
+    .step-body h3 { font-size: .95rem; font-weight: 600; margin-bottom: .25rem; }
+    .step-body p  { font-size: .875rem; color: var(--muted); }
+
+    /* ── Resource table ── */
+    .res-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .res-item {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+    }
+    .res-item .badge {
+      display: inline-block;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .15rem .5rem;
+      border-radius: 4px;
+      margin-bottom: .4rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .badge-aws    { background: #ff9900; color: #000; }
+    .badge-gh     { background: #6e40c9; color: #fff; }
+    .badge-rand   { background: var(--accent3); color: #000; }
+    .res-item h3  { font-size: .9rem; font-weight: 600; }
+    .res-item p   { font-size: .8rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ── Secrets table ── */
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    th, td { padding: .65rem .9rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+    td code { background: var(--code-bg); padding: .1rem .35rem; border-radius: 4px; font-size: .8rem; color: var(--accent4); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Code block ── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: .82rem;
+      line-height: 1.65;
+    }
+    pre code { color: #cdd6f4; }
+    .kw  { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .cm  { color: #6c7086; font-style: italic; }
+    .fn  { color: #cba6f7; }
+    .ann { color: var(--accent2); }
+    .num { color: var(--accent4); }
+
+    /* ── Credential chain ── */
+    .chain { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+    .chain-item {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .65rem 1rem;
+      font-size: .83rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .chain-arrow { color: var(--muted); font-size: 1.1rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-local { background: var(--accent3); }
+    .dot-ci    { background: var(--accent); }
+
+    /* ── Cleanup ── */
+    .warn {
+      background: #2d1b00;
+      border: 1px solid #7c4a00;
+      border-radius: 8px;
+      padding: .9rem 1.1rem;
+      font-size: .875rem;
+      color: #fcc419;
+      margin-top: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: .8rem;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── Header ── -->
+  <header>
+    <h1><span>etude-1</span> 인프라 가이드</h1>
+    <p>Terraform으로 시크릿을 프로비저닝하고 Spring Boot에서 조회하는 전체 흐름</p>
+  </header>
+
+  <!-- ── 전체 아키텍처 다이어그램 ── -->
+  <div class="card">
+    <h2>전체 아키텍처</h2>
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 1200 420" width="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr"  markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0,9 3.5,0 7" fill="#5c7cfa"/>
+          </marker>
+          <marker id="arr2" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0,9 3.5,0 7" fill="#20c997"/>
+          </marker>
+          <marker id="arr3" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0,9 3.5,0 7" fill="#ff9900"/>
+          </marker>
+          <marker id="arr4" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0,9 3.5,0 7" fill="#9b8ec4"/>
+          </marker>
+          <marker id="arr5" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0,9 3.5,0 7" fill="#f06595"/>
+          </marker>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- ── Zone: DEVELOPER ── -->
+        <rect x="10"  y="10"  width="220" height="400" rx="12" fill="#1a1d27" stroke="#2e3250" stroke-width="1.5"/>
+        <text x="120" y="32"  text-anchor="middle" font-size="12" fill="#8892b0" font-weight="700" letter-spacing="1">DEVELOPER</text>
+
+        <!-- 로컬 환경 -->
+        <rect x="25"  y="48"  width="190" height="70" rx="8" fill="#232740" stroke="#5c7cfa" stroke-width="1.5"/>
+        <text x="120" y="72"  text-anchor="middle" font-size="11" fill="#cdd6f4" font-weight="700">로컬 환경</text>
+        <text x="120" y="91"  text-anchor="middle" font-size="10" fill="#8892b0">aws-cli profile (terraform_user)</text>
+        <text x="120" y="108" text-anchor="middle" font-size="10" fill="#8892b0">GITHUB_TOKEN (repo scope PAT)</text>
+
+        <!-- terraform.tfvars -->
+        <rect x="25"  y="145" width="190" height="60" rx="8" fill="#232740" stroke="#5c7cfa" stroke-width="1.5"/>
+        <text x="120" y="169" text-anchor="middle" font-size="11" fill="#cdd6f4" font-weight="700">terraform.tfvars</text>
+        <text x="120" y="188" text-anchor="middle" font-size="10" fill="#fcc419">github_owner  /  github_repository</text>
+
+        <!-- terraform apply -->
+        <rect x="25"  y="235" width="190" height="55" rx="8" fill="#5c7cfa22" stroke="#5c7cfa" stroke-width="1.5" filter="url(#glow)"/>
+        <text x="120" y="258" text-anchor="middle" font-size="11" fill="#89b4fa" font-weight="700">terraform apply</text>
+        <text x="120" y="276" text-anchor="middle" font-size="10" fill="#8892b0">AWS · GitHub · random 3개 provider</text>
+
+        <!-- ── Zone: TERRAFORM ── -->
+        <rect x="260" y="10"  width="260" height="400" rx="12" fill="#1a1d27" stroke="#2e3250" stroke-width="1.5"/>
+        <text x="390" y="32"  text-anchor="middle" font-size="12" fill="#8892b0" font-weight="700" letter-spacing="1">TERRAFORM</text>
+
+        <!-- random_password -->
+        <rect x="275" y="48"  width="230" height="65" rx="8" fill="#232740" stroke="#20c997" stroke-width="1.5"/>
+        <text x="390" y="72"  text-anchor="middle" font-size="11" fill="#cdd6f4" font-weight="700">random_password</text>
+        <text x="390" y="91"  text-anchor="middle" font-size="10" fill="#20c997">길이 24, 특수문자 포함</text>
+        <text x="390" y="106" text-anchor="middle" font-size="10" fill="#8892b0">state에만 존재 · 외부 미노출</text>
+
+        <!-- aws_secretsmanager_secret -->
+        <rect x="275" y="145" width="230" height="75" rx="8" fill="#232740" stroke="#20c997" stroke-width="1.5"/>
+        <text x="390" y="169" text-anchor="middle" font-size="11" fill="#cdd6f4" font-weight="700">aws_secretsmanager_secret</text>
+        <text x="390" y="188" text-anchor="middle" font-size="10" fill="#8892b0">secret  +  secret_version</text>
+        <text x="390" y="204" text-anchor="middle" font-size="10" fill="#fcc419">{"password": "..."}</text>
+        <text x="390" y="216" text-anchor="middle" font-size="10" fill="#8892b0">recovery_window = 0</text>
+
+        <!-- github_actions_secret -->
+        <rect x="275" y="252" width="230" height="85" rx="8" fill="#232740" stroke="#20c997" stroke-width="1.5"/>
+        <text x="390" y="276" text-anchor="middle" font-size="11" fill="#cdd6f4" font-weight="700">github_actions_secret × 3</text>
+        <text x="390" y="296" text-anchor="middle" font-size="10" fill="#8892b0">AWS_SECRET_NAME</text>
+        <text x="390" y="313" text-anchor="middle" font-size="10" fill="#8892b0">AWS_REGION</text>
+        <text x="390" y="330" text-anchor="middle" font-size="10" fill="#8892b0">APP_PASSWORD</text>
+
+        <!-- ── Zone: AWS ── -->
+        <rect x="560" y="10"  width="270" height="195" rx="12" fill="#1a1d27" stroke="#ff990040" stroke-width="1.5"/>
+        <text x="695" y="32"  text-anchor="middle" font-size="12" fill="#ff9900" font-weight="700" letter-spacing="1">AWS</text>
+
+        <!-- Secrets Manager -->
+        <rect x="578" y="48"  width="234" height="130" rx="8" fill="#232740" stroke="#ff9900" stroke-width="1.5"/>
+        <text x="695" y="74"  text-anchor="middle" font-size="11" fill="#ff9900" font-weight="700">Secrets Manager</text>
+        <text x="695" y="96"  text-anchor="middle" font-size="10" fill="#cdd6f4">이름: etude-1/app-password</text>
+        <text x="695" y="114" text-anchor="middle" font-size="10" fill="#fcc419">{"password": "Ax3!..."}</text>
+        <text x="695" y="132" text-anchor="middle" font-size="10" fill="#8892b0">recovery_window_in_days = 0</text>
+        <text x="695" y="150" text-anchor="middle" font-size="10" fill="#8892b0">destroy 시 즉시 삭제</text>
+
+        <!-- ── Zone: GITHUB ── -->
+        <rect x="560" y="225" width="270" height="185" rx="12" fill="#1a1d27" stroke="#6e40c940" stroke-width="1.5"/>
+        <text x="695" y="247" text-anchor="middle" font-size="12" fill="#9b8ec4" font-weight="700" letter-spacing="1">GITHUB</text>
+
+        <!-- Actions Secrets -->
+        <rect x="578" y="262" width="234" height="130" rx="8" fill="#232740" stroke="#6e40c9" stroke-width="1.5"/>
+        <text x="695" y="287" text-anchor="middle" font-size="11" fill="#9b8ec4" font-weight="700">Actions Secrets</text>
+        <text x="695" y="309" text-anchor="middle" font-size="10" fill="#cdd6f4">AWS_SECRET_NAME — 시크릿 이름</text>
+        <text x="695" y="327" text-anchor="middle" font-size="10" fill="#cdd6f4">AWS_REGION — ap-northeast-2</text>
+        <text x="695" y="345" text-anchor="middle" font-size="10" fill="#cdd6f4">APP_PASSWORD — 평문 비밀번호</text>
+
+        <!-- ── Zone: SPRING BOOT ── -->
+        <rect x="870" y="10"  width="320" height="400" rx="12" fill="#1a1d27" stroke="#2e3250" stroke-width="1.5"/>
+        <text x="1030" y="32" text-anchor="middle" font-size="12" fill="#8892b0" font-weight="700" letter-spacing="1">SPRING BOOT</text>
+
+        <!-- SecretsController -->
+        <rect x="885" y="48"  width="290" height="120" rx="8" fill="#232740" stroke="#f06595" stroke-width="1.5"/>
+        <text x="1030" y="74"  text-anchor="middle" font-size="11" fill="#f06595" font-weight="700">SecretsController</text>
+        <text x="1030" y="96"  text-anchor="middle" font-size="10" fill="#cdd6f4">GET /  →  getSecretValue() 호출</text>
+        <text x="1030" y="114" text-anchor="middle" font-size="10" fill="#8892b0">SecretsManagerClient.builder()</text>
+        <text x="1030" y="130" text-anchor="middle" font-size="10" fill="#8892b0">.region(AP_NORTHEAST_2).build()</text>
+        <text x="1030" y="148" text-anchor="middle" font-size="10" fill="#fcc419">response.secretString() 반환</text>
+
+        <!-- DefaultCredentialsChain -->
+        <rect x="885" y="198" width="290" height="100" rx="8" fill="#232740" stroke="#5c7cfa" stroke-width="1.5"/>
+        <text x="1030" y="222" text-anchor="middle" font-size="11" fill="#89b4fa" font-weight="700">DefaultCredentialsProviderChain</text>
+        <text x="1030" y="243" text-anchor="middle" font-size="10" fill="#20c997">로컬: ~/.aws/credentials (terraform_user)</text>
+        <text x="1030" y="261" text-anchor="middle" font-size="10" fill="#9b8ec4">CI: OIDC 또는 access key</text>
+        <text x="1030" y="279" text-anchor="middle" font-size="10" fill="#8892b0">환경에 따라 자동 선택</text>
+
+        <!-- ── Arrows ── -->
+
+        <!-- 로컬환경 → random_password -->
+        <line x1="215" y1="82"  x2="273" y2="80"  stroke="#5c7cfa" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- tfvars → secretsmanager (github_owner/repo 입력) -->
+        <line x1="215" y1="175" x2="273" y2="182" stroke="#5c7cfa" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- apply → github_actions_secret -->
+        <line x1="215" y1="262" x2="273" y2="294" stroke="#5c7cfa" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- random_password → secretsmanager (비밀번호 전달) -->
+        <line x1="390" y1="113" x2="390" y2="143" stroke="#20c997" stroke-width="2" marker-end="url(#arr2)"/>
+        <text x="395" y="133" font-size="9.5" fill="#20c997">비밀번호 전달</text>
+
+        <!-- random_password → github_actions_secret (APP_PASSWORD) -->
+        <path d="M 390 113 Q 350 185 390 250" fill="none" stroke="#20c997" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arr2)"/>
+        <text x="340" y="195" font-size="9.5" fill="#20c997">APP_PASSWORD</text>
+
+        <!-- secretsmanager → Secrets Manager (AWS) -->
+        <line x1="505" y1="182" x2="576" y2="113" stroke="#ff9900" stroke-width="2" marker-end="url(#arr3)"/>
+        <text x="512" y="138" font-size="10" fill="#ff9900" font-weight="600">create secret</text>
+
+        <!-- github_actions_secret → Actions Secrets -->
+        <line x1="505" y1="294" x2="576" y2="320" stroke="#9b8ec4" stroke-width="2" marker-end="url(#arr4)"/>
+        <text x="510" y="312" font-size="10" fill="#9b8ec4" font-weight="600">inject secrets</text>
+
+        <!-- SecretsController → Secrets Manager: API call -->
+        <line x1="885" y1="96"  x2="814" y2="113" stroke="#f06595" stroke-width="2" marker-end="url(#arr5)"/>
+        <text x="822" y="92"  font-size="10" fill="#f06595" font-weight="600">API call</text>
+
+        <!-- Secrets Manager → SecretsController: JSON response -->
+        <path d="M 812 130 Q 845 155 885 125" fill="none" stroke="#f06595" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arr5)"/>
+        <text x="820" y="155" font-size="10" fill="#f06595" font-style="italic">JSON response</text>
+
+        <!-- DefaultCredentialsChain → SecretsController -->
+        <line x1="1030" y1="198" x2="1030" y2="170" stroke="#5c7cfa" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arr)"/>
+        <text x="1035" y="190" font-size="9.5" fill="#89b4fa">자격증명 제공</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ── 데이터 흐름 단계 ── -->
+  <div class="card">
+    <h2>데이터 흐름 — 단계별 설명</h2>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>비밀번호 생성 (random_password)</h3>
+          <p>Terraform이 <code>random</code> 프로바이더로 길이 24, 특수문자 포함 랜덤 비밀번호를 메모리 안에서 생성합니다. 이 값은 state에만 존재하며 외부로 직접 노출되지 않습니다.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>AWS Secrets Manager에 저장</h3>
+          <p><code>aws_secretsmanager_secret</code>으로 시크릿 항목을 만들고, <code>aws_secretsmanager_secret_version</code>으로 <code>{"password":"..."}</code> 형식의 JSON 값을 주입합니다. <code>recovery_window_in_days = 0</code>이므로 <code>terraform destroy</code> 시 즉시 삭제됩니다.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>GitHub Actions 시크릿 주입</h3>
+          <p><code>github</code> 프로바이더가 동일 apply 내에서 3개의 Actions 시크릿을 대상 레포지토리에 씁니다 — <code>AWS_SECRET_NAME</code>, <code>AWS_REGION</code>(어디서 읽을지), <code>APP_PASSWORD</code>(평문 비밀번호). CI가 AWS 자격증명 없이도 비밀번호를 직접 참조할 수 있도록 하기 위함입니다.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Spring Boot에서 조회</h3>
+          <p><code>SecretsController</code>가 AWS SDK <code>SecretsManagerClient</code>를 통해 <code>GET /</code> 요청 시 시크릿을 조회하고 JSON 문자열을 응답으로 반환합니다. 자격증명은 DefaultCredentialsProviderChain에 의해 자동 선택됩니다.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>자격증명 자동 선택</h3>
+          <p>SDK가 환경에 따라 자격증명 소스를 자동으로 결정합니다. 로컬 실행 시에는 <code>~/.aws/credentials</code>의 <code>terraform_user</code> 프로필이 사용되고, GitHub Actions에서는 OIDC 또는 주입된 Access Key가 사용됩니다.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Terraform 리소스 목록 ── -->
+  <div class="card">
+    <h2>Terraform 리소스 일람</h2>
+    <div class="res-grid">
+      <div class="res-item">
+        <span class="badge badge-rand">random</span>
+        <h3>random_password.app_password</h3>
+        <p>length=24, special=true<br>24자 랜덤 비밀번호. state에만 존재.</p>
+      </div>
+      <div class="res-item">
+        <span class="badge badge-aws">AWS</span>
+        <h3>aws_secretsmanager_secret</h3>
+        <p>이름: <code>etude-1/app-password</code><br>recovery_window = 0 (즉시 삭제)</p>
+      </div>
+      <div class="res-item">
+        <span class="badge badge-aws">AWS</span>
+        <h3>aws_secretsmanager_secret_version</h3>
+        <p>값: <code>{"password": "..."}</code><br>위 시크릿의 실제 값 버전</p>
+      </div>
+      <div class="res-item">
+        <span class="badge badge-gh">GitHub</span>
+        <h3>github_actions_secret × 3</h3>
+        <p>AWS_SECRET_NAME · AWS_REGION · APP_PASSWORD<br>대상 레포의 Actions Secrets에 주입</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GitHub Actions 시크릿 상세 ── -->
+  <div class="card">
+    <h2>GitHub Actions 시크릿 상세</h2>
+    <table>
+      <thead>
+        <tr><th>시크릿 이름</th><th>값 출처</th><th>용도</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>AWS_SECRET_NAME</code></td>
+          <td>aws_secretsmanager_secret.name</td>
+          <td>SDK 호출 시 secretId 파라미터</td>
+        </tr>
+        <tr>
+          <td><code>AWS_REGION</code></td>
+          <td>var.aws_region (기본: ap-northeast-2)</td>
+          <td>SDK 클라이언트 리전 설정</td>
+        </tr>
+        <tr>
+          <td><code>APP_PASSWORD</code></td>
+          <td>random_password.result (평문)</td>
+          <td>AWS 자격증명 없이 직접 사용하는 시나리오용</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── 자격증명 체인 ── -->
+  <div class="card">
+    <h2>자격증명 체인 (DefaultCredentialsProviderChain)</h2>
+    <p style="font-size:.875rem; color:var(--muted); margin-bottom:1rem;">SDK는 아래 순서로 자격증명을 탐색하며, 첫 번째로 유효한 소스를 사용합니다.</p>
+    <div class="chain">
+      <div class="chain-item"><span class="dot dot-local"></span>환경변수<br><small style="color:var(--muted)">AWS_ACCESS_KEY_ID 등</small></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span class="dot dot-local"></span>~/.aws/credentials<br><small style="color:var(--muted)">로컬 프로필 (terraform_user)</small></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span class="dot dot-ci"></span>컨테이너 자격증명<br><small style="color:var(--muted)">ECS Task Role 등</small></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span class="dot dot-ci"></span>EC2 Instance Metadata<br><small style="color:var(--muted)">EC2 IAM Role</small></div>
+      <span class="chain-arrow">→</span>
+      <div class="chain-item"><span class="dot dot-ci"></span>GitHub OIDC<br><small style="color:var(--muted)">Actions 환경에서 OIDC 발급</small></div>
+    </div>
+  </div>
+
+  <!-- ── 사전 준비 ── -->
+  <div class="card">
+    <h2>사전 준비 및 실행</h2>
+
+    <h3 style="font-size:.9rem; margin-bottom:.5rem; color:var(--accent)">1. AWS IAM 설정</h3>
+    <p style="font-size:.85rem; color:var(--muted); margin-bottom:.75rem;">로컬 <code>aws-cli</code>에 <code>SecretsManagerReadWrite</code> 권한을 가진 IAM 사용자 <code>terraform_user</code> 프로필이 필요합니다.</p>
+
+    <h3 style="font-size:.9rem; margin:.75rem 0 .5rem; color:var(--accent)">2. GitHub PAT 노출</h3>
+    <pre><code><span class="kw">export</span> GITHUB_TOKEN=ghp_xxx   <span class="cm"># repo 스코프 필요</span></code></pre>
+
+    <h3 style="font-size:.9rem; margin:.75rem 0 .5rem; color:var(--accent)">3. terraform.tfvars 작성</h3>
+    <pre><code>github_owner      = <span class="str">"your-github-username"</span>
+github_repository = <span class="str">"your-repo-name"</span></code></pre>
+
+    <h3 style="font-size:.9rem; margin:.75rem 0 .5rem; color:var(--accent)">4. Terraform 적용</h3>
+    <pre><code><span class="kw">cd</span> etude-1/terraform
+terraform init
+terraform plan
+terraform apply</code></pre>
+
+    <h3 style="font-size:.9rem; margin:.75rem 0 .5rem; color:var(--accent)">5. Spring Boot 실행 및 확인</h3>
+    <pre><code><span class="kw">cd</span> etude-1/springboot
+./gradlew bootRun
+
+<span class="cm"># 새 터미널에서</span>
+curl http://localhost:8080/
+<span class="cm"># → {"password":"Ax3!..."}</span></code></pre>
+
+    <div class="warn">
+      ⚠️ <strong>정리:</strong> <code>terraform destroy</code> 실행 시 <code>recovery_window_in_days = 0</code> 설정으로 인해 시크릿이 즉시 영구 삭제됩니다.
+    </div>
+  </div>
+
+  <!-- ── Spring Boot 코드 ── -->
+  <div class="card">
+    <h2>Spring Boot 핵심 코드</h2>
+    <pre><code><span class="ann">@RestController</span>
+<span class="kw">public class</span> <span class="fn">SecretsController</span> {
+
+    <span class="kw">private final</span> SecretsManagerClient client =
+        SecretsManagerClient.builder()
+            .region(Region.AP_NORTHEAST_2)
+            .build();  <span class="cm">// DefaultCredentialsProviderChain 사용</span>
+
+    <span class="ann">@GetMapping</span>(<span class="str">"/"</span>)
+    <span class="kw">public</span> String <span class="fn">getSecrets</span>() {
+        GetSecretValueResponse response = client.getSecretValue(
+            GetSecretValueRequest.builder()
+                .secretId(<span class="str">"etude-1/app-password"</span>)
+                .build()
+        );
+        <span class="kw">return</span> response.secretString();  <span class="cm">// {"password":"..."}</span>
+    }
+}</code></pre>
+  </div>
+
+  <footer>etude-1 &nbsp;·&nbsp; Terraform + AWS Secrets Manager + GitHub Actions + Spring Boot</footer>
+</div>
+</body>
+</html>
