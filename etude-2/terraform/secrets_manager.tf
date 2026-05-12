@@ -7,6 +7,8 @@ resource "random_password" "app_password" {
 resource "aws_secretsmanager_secret" "app_password" {
   name        = var.secret_name
   description = "etude-1 학습용으로 Terraform이 관리하는 애플리케이션 비밀번호"
+
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "app_password" {
